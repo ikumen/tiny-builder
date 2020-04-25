@@ -3,10 +3,10 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.gnoht</groupId>
-	<artifactId>biruda-module</artifactId>
+	<artifactId>tiny-builder</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>biruda-module</name>
-	<description>Auto generate builders</description>
+	<name>tiny-builder</name>
+	<description>A little tool for auto generating builders</description>
 
 	<properties>
 		<auto-service.version>1.0-rc6</auto-service.version>
