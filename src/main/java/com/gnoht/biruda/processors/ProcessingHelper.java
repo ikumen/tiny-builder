@@ -39,6 +39,12 @@ public class ProcessingHelper {
     return Character.toLowerCase(s.charAt(0)) + s.substring(1);
   }
 
+  /**
+   * Return true if a given {@link Element} is boolean primitive or boxed version.
+   *
+   * @param element
+   * @return true if boolean or Boolean, otherwise false.
+   */
   public static boolean isBooleanType(Element element) {
     TypeName typeName = getTypeName(element);
     return (typeName.isBoxedPrimitive() && typeName.unbox().equals(TypeName.BOOLEAN))

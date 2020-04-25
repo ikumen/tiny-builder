@@ -1,15 +1,18 @@
 package com.gnoht.biruda.processors;
 
-import static com.gnoht.biruda.processors.ProcessingHelper.*;
-
 import com.gnoht.biruda.Builder;
 import com.google.auto.service.AutoService;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Processor;
 import javax.lang.model.element.*;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.gnoht.biruda.processors.ProcessingHelper.*;
 
 /**
  * @author ikumen@gnoht.com
@@ -26,11 +29,11 @@ public class BuilderProcessor extends SourceGeneratingProcessor {
     if (kind.equals(ElementKind.CLASS) &&
         !modifiers.contains(Modifier.ABSTRACT)) {
       return generateFor((TypeElement) targetElement);
-    // and non-private, non-empty constructors ...
+      // and non-private, non-empty constructors ...
     } else if (kind.equals(ElementKind.CONSTRUCTOR) && !modifiers.contains(Modifier.PRIVATE) &&
         ((ExecutableElement) targetElement).getParameters().size() > 0) {
       return generateFor((ExecutableElement) targetElement, true);
-    // and accessible, static, non-private, non-empty factory methods
+      // and accessible, static, non-private, non-empty factory methods
     } else if (kind.equals(ElementKind.METHOD) && modifiers.contains(Modifier.STATIC) &&
         (modifiers.contains(Modifier.PUBLIC) || (!modifiers.contains(Modifier.PRIVATE) &&
             typeUtils.asElement(((ExecutableElement) targetElement).getReturnType())
@@ -39,16 +42,18 @@ public class BuilderProcessor extends SourceGeneratingProcessor {
     }
 
     throw new ProcessingException(targetElement,
-        "Builder can only target concrete classes, call non-private constructors/static " +
-        "methods, and package/protected static methods of target classes");
-
+        "Builder can only target concrete classes, non-private constructors/static " +
+            "methods, and package/protected static methods of target classes");
   }
 
-  /* Helper for determining if given constructor parameter corresponds class instance field */
+  /*
+   * Helper for determining if given method parameter corresponds
+   * to a set of instance field
+   */
   private boolean isParameterInTargetFields(VariableElement parameter, Set<VariableElement> fields) {
     TypeName paramTypeName = getTypeName(parameter);
     String paramName = getSimpleName(parameter);
-    for (VariableElement field: fields) {
+    for (VariableElement field : fields) {
       if (paramTypeName.equals(getTypeName(field))
           && paramName.equals(getSimpleName(field)))
         return true;
@@ -64,7 +69,7 @@ public class BuilderProcessor extends SourceGeneratingProcessor {
   private ExecutableElement resolveTargetConstructor(TypeElement targetType) {
     Set<VariableElement> fields = new HashSet<>();
     Set<ExecutableElement> constructors = new HashSet<>();
-    for (Element member: targetType.getEnclosedElements()) {
+    for (Element member : targetType.getEnclosedElements()) {
       if (member.getKind() == ElementKind.FIELD
           && member.getAnnotation(Builder.Ignored.class) == null
           && !member.getModifiers().contains(Modifier.STATIC)) {
@@ -74,10 +79,10 @@ public class BuilderProcessor extends SourceGeneratingProcessor {
       }
     }
     // Return the first constructor that matches all the fields in our target
-    for (ExecutableElement constructor: constructors) {
+    for (ExecutableElement constructor : constructors) {
       if (fields.size() == constructor.getParameters().size()
           && fields.size() == constructor.getParameters().stream()
-              .filter(param -> isParameterInTargetFields(param, fields)).count()) {
+          .filter(param -> isParameterInTargetFields(param, fields)).count()) {
         return constructor;
       }
     }
@@ -87,41 +92,49 @@ public class BuilderProcessor extends SourceGeneratingProcessor {
   }
 
   /* Create the initial class TypeSpec Builder */
-  private TypeSpec.Builder getClassBuilder(final ClassName builderClassName, List<? extends VariableElement> parameters) {
+  private TypeSpec.Builder getClassBuilder(final ClassName builderClassName,
+                                           TypeElement targetType, ExecutableElement targetExecutable, Builder builderAnnotation) {
     final TypeSpec.Builder classBuilder = TypeSpec.classBuilder(builderClassName)
         .addJavadoc("DO NOT EDIT, AUTO-GENERATED CODE")
-        .addModifiers(Modifier.PUBLIC);
+        .addModifiers(Modifier.PUBLIC)
+        .addMethod(getBuilderMethod(builderClassName));
 
-    parameters.forEach(param -> {
+    targetExecutable.getParameters().forEach(param -> {
       TypeName paramTypeName = getTypeName(param);
       String paramName = getSimpleName(param);
 
       classBuilder
-        .addField(paramTypeName, paramName, Modifier.PRIVATE)
-        .addMethod(
-            MethodSpec.methodBuilder(paramName)
-              .addModifiers(Modifier.PUBLIC)
-              .addParameter(paramTypeName, paramName)
-              .addStatement("this.$1L = $1L", paramName)
-              .addStatement("return this")
-              .returns(builderClassName)
-              .build());
+          .addField(paramTypeName, paramName, Modifier.PRIVATE)
+          .addMethod(
+              MethodSpec.methodBuilder(paramName)
+                  .addModifiers(Modifier.PUBLIC)
+                  .addParameter(paramTypeName, paramName)
+                  .addStatement("this.$1L = $1L", paramName)
+                  .addStatement("return this")
+                  .returns(builderClassName)
+                  .build());
 
       if (!paramTypeName.isPrimitive()) {
         classBuilder.addMethod(
-          MethodSpec.methodBuilder(paramName + "IfPresent")
-              .addModifiers(Modifier.PUBLIC)
-              .addParameter(paramTypeName, paramName)
-              .addCode(CodeBlock.builder()
-                  .beginControlFlow("if ($1L != null)", paramName)
-                  .addStatement("this.$1L = $1L", paramName)
-                  .endControlFlow()
-                  .build())
-              .addStatement("return this")
-              .returns(builderClassName)
-              .build());
+            MethodSpec.methodBuilder(paramName + "IfPresent")
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(paramTypeName, paramName)
+                .addCode(CodeBlock.builder()
+                    .beginControlFlow("if ($1L != null)", paramName)
+                    .addStatement("this.$1L = $1L", paramName)
+                    .endControlFlow()
+                    .build())
+                .addStatement("return this")
+                .returns(builderClassName)
+                .build());
       }
     });
+
+    if (builderAnnotation.allowWith() &&
+        canCreateWithInstance(targetType, targetExecutable)) {
+      classBuilder.addMethod(getWithInstanceMethod(builderClassName, targetType, targetExecutable));
+    }
+
     return classBuilder;
   }
 
@@ -131,19 +144,20 @@ public class BuilderProcessor extends SourceGeneratingProcessor {
    * parameters of the constructor.
    */
   private TypeSpec generateFor(TypeElement targetType) {
-    ClassName builderClassName = getBuilderClassName(targetType, targetType);
+    Builder targetAnnotation = targetType.getAnnotation(Builder.class);
+    ClassName builderClassName = getBuilderClassName(targetType, targetAnnotation);
     ExecutableElement targetConstructor = resolveTargetConstructor(targetType);
     List<? extends VariableElement> targetParameters = targetConstructor.getParameters();
 
     // Generate build class declaration
-    TypeSpec.Builder classBuilder = getClassBuilder(builderClassName, targetParameters)
-        .addMethod(getOfMethod(builderClassName))
+    TypeSpec.Builder classBuilder = getClassBuilder(builderClassName,
+        targetType, targetConstructor, targetAnnotation)
         .addMethod(
             MethodSpec.methodBuilder("build")
                 .addModifiers(Modifier.PUBLIC)
                 .addStatement("return new $T($L)", targetType,
                     targetParameters.stream().map(p -> getSimpleName(p))
-                    .collect(Collectors.joining(",")))
+                        .collect(Collectors.joining(",")))
                 .returns(getTypeName(targetType))
                 .build());
 
@@ -158,7 +172,8 @@ public class BuilderProcessor extends SourceGeneratingProcessor {
   private TypeSpec generateFor(ExecutableElement targetExecutable, boolean isConstructor) {
     TypeElement enclosingType = (TypeElement) targetExecutable.getEnclosingElement();
     TypeElement targetType = isConstructor ? enclosingType : (TypeElement) typeUtils.asElement(targetExecutable.getReturnType());
-    ClassName builderClassName = getBuilderClassName(targetType, targetExecutable);
+    Builder targetAnnotation = targetExecutable.getAnnotation(Builder.class);
+    ClassName builderClassName = getBuilderClassName(targetType, targetAnnotation);
     List<? extends VariableElement> targetParameters = targetExecutable.getParameters();
 
     MethodSpec.Builder buildMethodBuilder = MethodSpec
@@ -176,27 +191,76 @@ public class BuilderProcessor extends SourceGeneratingProcessor {
               .collect(Collectors.joining(",")));
     }
 
-    return getClassBuilder(builderClassName, targetParameters)
-        .addMethod(buildMethodBuilder.build())
-        .addMethod(getOfMethod(builderClassName))
-        .build();
+    TypeSpec.Builder classBuilder = getClassBuilder(builderClassName,
+        targetType, targetExecutable, targetAnnotation)
+        .addMethod(buildMethodBuilder.build());
+
+    return classBuilder.build();
   }
 
   /*
-   * Helper for generating the static "of" factory method, that constructs
+   * Helper for generating the static "builder" factory method, that constructs
    * our builder class.
    */
-  private MethodSpec getOfMethod(ClassName builderClassName) {
-    return MethodSpec.methodBuilder("of")
+  private MethodSpec getBuilderMethod(ClassName builderClassName) {
+    return MethodSpec.methodBuilder("builder")
         .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
         .addStatement("return new $T()", builderClassName)
         .returns(builderClassName)
         .build();
   }
 
+  private MethodSpec getWithInstanceMethod(ClassName builderClassName, TypeElement targetType, ExecutableElement targetExecutable) {
+    final String unCapitalizedTargetClass = uncapitalize(getSimpleName(targetType));
+    return MethodSpec.methodBuilder("with")
+        .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+        .addParameter(ClassName.get(targetType), unCapitalizedTargetClass)
+        .addStatement("return new $T()$L", builderClassName,
+            targetExecutable.getParameters().stream()
+                .map(p -> {
+                  String pName = getSimpleName(p);
+                  return new StringBuilder("\n.")
+                      .append(pName).append("(")
+                      .append(unCapitalizedTargetClass).append(".")
+                      .append(isBooleanType(p) ? "is" : "get")
+                      .append(capitalize(pName)).append("()")
+                      .append(")")
+                      .toString();
+                }).collect(Collectors.joining()))
+        .returns(builderClassName)
+        .build();
+  }
+
+  /*
+   * To create an "with(instance)", we need to make sure the target instance
+   * has corresponding getters we can access and match up with our target
+   * method/constructor.
+   */
+  private boolean canCreateWithInstance(TypeElement targetType, ExecutableElement targetExecutable) {
+    for (VariableElement parameter : targetExecutable.getParameters()) {
+      boolean hasGetterForParameter = false;
+      String paramName = getSimpleName(parameter);
+      for (Element member : targetType.getEnclosedElements()) {
+        if (member.getKind().equals(ElementKind.METHOD)) {
+          ExecutableElement method = (ExecutableElement) member;
+          if (getSimpleName(method).equals("get" + capitalize(paramName)) &&
+              method.getReturnType().equals(parameter.asType())) {
+            hasGetterForParameter = true;
+            break;
+          }
+        }
+      }
+      if (!hasGetterForParameter)
+        throw new ProcessingException(targetType, "'with' static factory method " +
+            "requires getters for every (" + getSimpleName(targetExecutable) + ") " +
+            "parameter. " + getSimpleName(targetType) + " has no getter for " +
+            "parameter: " + paramName);
+    }
+    return true;
+  }
+
   /* Returns the generated Builder Class name depending on the given Element */
-  private ClassName getBuilderClassName(TypeElement targetElement, Element annotated) {
-    Builder builder = annotated.getAnnotation(Builder.class);
+  private ClassName getBuilderClassName(TypeElement targetElement, Builder builder) {
     return getClassName(elementUtils.getPackageOf(targetElement),
         builder.prefix() + getSimpleName(targetElement) + builder.suffix());
   }

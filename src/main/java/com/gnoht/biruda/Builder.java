@@ -43,11 +43,11 @@ public @interface Builder {
     String suffix() default "Builder";
 
     /**
-     * Allows generating an additional builder "of" method from an existing
+     * Allows generating an additional builder "with" method from an existing
      * target class instance.
      * @return true if we should generate the additional "of" method
      */
-    boolean allowOfExisting() default true;
+    boolean allowWith() default true;
 
     /**
      * Can be used in conjunction with {@link Builder} when Builder is annotated
