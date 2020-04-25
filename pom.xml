@@ -4,9 +4,24 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.gnoht</groupId>
 	<artifactId>tiny-builder</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.1.0-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
 	<name>tiny-builder</name>
 	<description>A little tool for auto generating builders</description>
+	<url>https://github.com/ikumen/tiny-builder</url>
+
+	<licenses>
+		<license>
+			<name>MIT License</name>
+			<url>https://github.com/ikumen/tiny-builder/blob/master/LICENSE</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<scm>
+		<url>https://github.com/ikumen/tiny-builder</url>
+	</scm>
 
 	<properties>
 		<auto-service.version>1.0-rc6</auto-service.version>
@@ -75,15 +90,15 @@
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>${maven-failsafe-plugin.version}</version>
 			</plugin>
-<!--			<plugin>-->
-<!--				<groupId>org.apache.maven.plugins</groupId>-->
-<!--				<artifactId>maven-compiler-plugin</artifactId>-->
-<!--				<configuration>-->
-<!--					<showWarnings>true</showWarnings>-->
-<!--&lt;!&ndash;					<source>${java.version}</source>&ndash;&gt;-->
-<!--&lt;!&ndash;					<target>${java.version}</target>&ndash;&gt;-->
-<!--				</configuration>-->
-<!--			</plugin>-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<showWarnings>true</showWarnings>
+					<source>${maven.compiler.source}</source>
+					<target>${maven.compiler.target}</target>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
