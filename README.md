@@ -1,4 +1,6 @@
-# Tiny Builder
+# Tiny Builder 
+[![Build Status](https://travis-ci.org/ikumen/tiny-builder.svg?branch=master)](https://travis-ci.org/ikumen/tiny-builder)
+
 A little tool for auto generating builders. 
 
 Given a target class
