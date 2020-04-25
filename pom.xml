@@ -25,15 +25,16 @@
 
 	<properties>
 		<auto-service.version>1.0-rc6</auto-service.version>
+		<compile-testing.version>0.18</compile-testing.version>
 		<javapoet.version>1.12.1</javapoet.version>
+		<junit-jupiter.version>5.6.2</junit-jupiter.version>
 		<maven-javadoc-plugin.version>3.2.0</maven-javadoc-plugin.version>
 		<maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
 		<maven-failsafe-plugin.version>2.22.2</maven-failsafe-plugin.version>
-		<compile-testing.version>0.18</compile-testing.version>
-		<truth.version>1.0.1</truth.version>
-		<junit-jupiter.version>5.6.2</junit-jupiter.version>
+		<maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
+		<truth.version>1.0.1</truth.version>
 	</properties>
 
 	<dependencies>
@@ -93,6 +94,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${maven-compiler-plugin.version}</version>
 				<configuration>
 					<showWarnings>true</showWarnings>
 					<source>${maven.compiler.source}</source>
