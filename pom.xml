@@ -104,5 +104,12 @@
 		</plugins>
 	</build>
 
+	<distributionManagement>
+		<repository>
+			<id>github</id>
+			<name>tiny-builder packages</name>
+			<url>https://maven.pkg.github.com/ikumen/tiny-builder</url>
+		</repository>
+	</distributionManagement>
 </project>
 
