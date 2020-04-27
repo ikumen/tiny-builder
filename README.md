@@ -67,22 +67,8 @@ public class PersonBuilder {
     return this;
   }
 
-  public PersonBuilder nameIfPresent(String name) {
-    if (name != null) {
-      this.name = name;
-    }
-    return this;
-  }
-
   public PersonBuilder age(Integer age) {
     this.age = age;
-    return this;
-  }
-
-  public PersonBuilder ageIfPresent(Integer age) {
-    if (age != null) {
-      this.age = age;
-    }
     return this;
   }
 
