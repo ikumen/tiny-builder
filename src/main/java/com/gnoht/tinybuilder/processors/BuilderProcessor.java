@@ -1,6 +1,6 @@
-package com.gnoht.biruda.processors;
+package com.gnoht.tinybuilder.processors;
 
-import com.gnoht.biruda.Builder;
+import com.gnoht.tinybuilder.Builder;
 import com.google.auto.service.AutoService;
 import com.squareup.javapoet.*;
 
@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.gnoht.biruda.processors.ProcessingHelper.*;
+import static com.gnoht.tinybuilder.processors.ProcessingHelper.*;
 
 /**
  * @author ikumen@gnoht.com
@@ -113,21 +113,6 @@ public class BuilderProcessor extends SourceGeneratingProcessor {
                   .addStatement("return this")
                   .returns(builderClassName)
                   .build());
-
-      if (!paramTypeName.isPrimitive()) {
-        classBuilder.addMethod(
-            MethodSpec.methodBuilder(paramName + "IfPresent")
-                .addModifiers(Modifier.PUBLIC)
-                .addParameter(paramTypeName, paramName)
-                .addCode(CodeBlock.builder()
-                    .beginControlFlow("if ($1L != null)", paramName)
-                    .addStatement("this.$1L = $1L", paramName)
-                    .endControlFlow()
-                    .build())
-                .addStatement("return this")
-                .returns(builderClassName)
-                .build());
-      }
     });
 
     if (builderAnnotation.allowWith() &&
@@ -243,8 +228,9 @@ public class BuilderProcessor extends SourceGeneratingProcessor {
       for (Element member : targetType.getEnclosedElements()) {
         if (member.getKind().equals(ElementKind.METHOD)) {
           ExecutableElement method = (ExecutableElement) member;
-          if (getSimpleName(method).equals("get" + capitalize(paramName)) &&
-              method.getReturnType().equals(parameter.asType())) {
+          String expectedMethodName = isBooleanType(parameter) ? "is" : "get" + capitalize(paramName);
+          if (getSimpleName(method).equals(expectedMethodName) &&
+              method.getReturnType().equals(parameter.asType()) ) {
             hasGetterForParameter = true;
             break;
           }

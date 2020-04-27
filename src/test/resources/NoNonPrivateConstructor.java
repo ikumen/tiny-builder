@@ -1,5 +1,5 @@
 
-import com.gnoht.biruda.Builder;
+import com.gnoht.tinybuilder.Builder;
 
 @Builder
 class NoNonPrivateConstructor {

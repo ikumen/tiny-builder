@@ -1,4 +1,4 @@
-package com.gnoht.biruda.processors;
+package com.gnoht.tinybuilder.processors;
 
 import static com.google.testing.compile.Compiler.javac;
 import static com.google.testing.compile.CompilationSubject.assertThat;

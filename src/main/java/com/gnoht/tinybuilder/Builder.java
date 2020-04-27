@@ -1,4 +1,4 @@
-package com.gnoht.biruda;
+package com.gnoht.tinybuilder;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

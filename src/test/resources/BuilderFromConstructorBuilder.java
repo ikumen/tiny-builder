@@ -18,22 +18,8 @@ public class BuilderFromConstructorBuilder {
     return this;
   }
 
-  public BuilderFromConstructorBuilder nameIfPresent(String name) {
-    if (name != null) {
-      this.name = name;
-    }
-    return this;
-  }
-
   public BuilderFromConstructorBuilder count(Integer count) {
     this.count = count;
-    return this;
-  }
-
-  public BuilderFromConstructorBuilder countIfPresent(Integer count) {
-    if (count != null) {
-      this.count = count;
-    }
     return this;
   }
 

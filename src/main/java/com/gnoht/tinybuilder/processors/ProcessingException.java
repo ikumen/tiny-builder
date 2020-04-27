@@ -1,4 +1,4 @@
-package com.gnoht.biruda.processors;
+package com.gnoht.tinybuilder.processors;
 
 import javax.lang.model.element.Element;
 

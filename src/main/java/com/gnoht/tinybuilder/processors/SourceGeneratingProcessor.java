@@ -1,4 +1,4 @@
-package com.gnoht.biruda.processors;
+package com.gnoht.tinybuilder.processors;
 
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;

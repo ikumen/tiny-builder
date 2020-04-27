@@ -1,4 +1,4 @@
-package com.gnoht.biruda.processors;
+package com.gnoht.tinybuilder.processors;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
