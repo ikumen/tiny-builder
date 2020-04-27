@@ -6,6 +6,7 @@ import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Processor;
 import javax.lang.model.element.*;
+import javax.lang.model.type.TypeMirror;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -224,23 +225,21 @@ public class BuilderProcessor extends SourceGeneratingProcessor {
   private boolean canCreateWithInstance(TypeElement targetType, ExecutableElement targetExecutable) {
     for (VariableElement parameter : targetExecutable.getParameters()) {
       boolean hasGetterForParameter = false;
-      String paramName = getSimpleName(parameter);
+      String expectedMethodName = (isBooleanType(parameter) ? "is" : "get") + capitalize(getSimpleName(parameter));
+      TypeMirror expectedMethodReturnType = parameter.asType();
       for (Element member : targetType.getEnclosedElements()) {
-        if (member.getKind().equals(ElementKind.METHOD)) {
-          ExecutableElement method = (ExecutableElement) member;
-          String expectedMethodName = isBooleanType(parameter) ? "is" : "get" + capitalize(paramName);
-          if (getSimpleName(method).equals(expectedMethodName) &&
-              method.getReturnType().equals(parameter.asType()) ) {
+        if (member.getKind().equals(ElementKind.METHOD) &&
+              ((ExecutableElement) member).getReturnType().equals(expectedMethodReturnType) &&
+                getSimpleName(member).equals(expectedMethodName)) {
             hasGetterForParameter = true;
             break;
-          }
         }
       }
       if (!hasGetterForParameter)
         throw new ProcessingException(targetType, "'with' static factory method " +
             "requires getters for every (" + getSimpleName(targetExecutable) + ") " +
             "parameter. " + getSimpleName(targetType) + " has no getter for " +
-            "parameter: " + paramName);
+            "parameter: " + getSimpleName(parameter));
     }
     return true;
   }

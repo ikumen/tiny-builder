@@ -1,4 +1,3 @@
-import java.lang.Integer;
 import java.lang.String;
 
 /**
@@ -7,7 +6,9 @@ import java.lang.String;
 public class BuilderFromConstructorBuilder {
   private String name;
 
-  private Integer count;
+  private int count;
+
+  private boolean shared;
 
   public static BuilderFromConstructorBuilder builder() {
     return new BuilderFromConstructorBuilder();
@@ -18,18 +19,24 @@ public class BuilderFromConstructorBuilder {
     return this;
   }
 
-  public BuilderFromConstructorBuilder count(Integer count) {
+  public BuilderFromConstructorBuilder count(int count) {
     this.count = count;
+    return this;
+  }
+
+  public BuilderFromConstructorBuilder shared(boolean shared) {
+    this.shared = shared;
     return this;
   }
 
   public static BuilderFromConstructorBuilder with(BuilderFromConstructor builderFromConstructor) {
     return new BuilderFromConstructorBuilder()
             .name(builderFromConstructor.getName())
-            .count(builderFromConstructor.getCount());
+            .count(builderFromConstructor.getCount())
+            .shared(builderFromConstructor.isShared());
   }
 
   public BuilderFromConstructor build() {
-    return new BuilderFromConstructor(name,count);
+    return new BuilderFromConstructor(name,count,shared);
   }
 }

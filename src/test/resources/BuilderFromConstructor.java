@@ -4,18 +4,24 @@ import com.gnoht.tinybuilder.Builder;
 @Builder
 class BuilderFromConstructor {
   String name;
-  Integer count;
+  int count;
+  boolean shared;
 
-  BuilderFromConstructor(String name, Integer count) {
+  public BuilderFromConstructor(String name, int count, boolean shared) {
     this.name = name;
     this.count = count;
+    this.shared = shared;
   }
 
   public String getName() {
     return name;
   }
 
-  public Integer getCount() {
+  public int getCount() {
     return count;
+  }
+
+  public boolean isShared() {
+    return shared;
   }
 }
