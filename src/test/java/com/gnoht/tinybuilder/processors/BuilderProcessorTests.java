@@ -23,6 +23,16 @@ public class BuilderProcessorTests {
   }
 
   @Test
+  public void shouldGenerateBuilderForTargetWithMultipleConstructors() {
+    Compilation compilation = javac().withProcessors(new BuilderProcessor())
+        .compile(JavaFileObjects.forResource("BuildTargetWithMultipleConstructors.java"));
+    assertThat(compilation).succeeded();
+    assertThat(compilation)
+        .generatedSourceFile("BuildTargetWithMultipleConstructorsBuilder")
+        .hasSourceEquivalentTo(JavaFileObjects.forResource("BuildTargetWithMultipleConstructorsBuilder.java"));
+  }
+
+  @Test
   public void shouldFailWhenMissingGetter() {
     Compilation compilation = javac().withProcessors(new BuilderProcessor())
         .compile(JavaFileObjects.forResource("MissingGetter.java"));

@@ -63,13 +63,15 @@ public class BuilderProcessor extends SourceGeneratingProcessor {
   }
 
   /*
-   * When a target class that we are generating a builder for has multiple
-   * constructors, try to find the first constructor that matches all
-   * the instance fields in the target class, and use that as a target constructor.
+   * If @Builder annotation is at the class level, we need to find the appropriate
+   * constructor to use in the static "build" method. Our rule for finding the
+   * target constructor is simple, find the constructor with the most parameters
+   * that match instance fields on the target class.
    */
   private ExecutableElement resolveTargetConstructor(TypeElement targetType) {
     Set<VariableElement> fields = new HashSet<>();
     Set<ExecutableElement> constructors = new HashSet<>();
+    ExecutableElement constructorWithMaxParameters = null;
     for (Element member : targetType.getEnclosedElements()) {
       if (member.getKind() == ElementKind.FIELD
           && member.getAnnotation(Builder.Ignored.class) == null
@@ -81,15 +83,22 @@ public class BuilderProcessor extends SourceGeneratingProcessor {
     }
     // Return the first constructor that matches all the fields in our target
     for (ExecutableElement constructor : constructors) {
-      if (fields.size() == constructor.getParameters().size()
-          && fields.size() == constructor.getParameters().stream()
-          .filter(param -> isParameterInTargetFields(param, fields)).count()) {
-        return constructor;
+      // relatively safe cast
+      int validParameterCount = (int) constructor.getParameters().stream()
+          .filter(param -> isParameterInTargetFields(param, fields)).count();
+      if (constructor.getParameters().size() == validParameterCount
+          && (constructorWithMaxParameters == null
+            || constructorWithMaxParameters.getParameters().size() < validParameterCount)) {
+        constructorWithMaxParameters = constructor;
       }
     }
 
-    throw new ProcessingException(targetType,
-        "Unable to resolve a constructor for the target class: " + getSimpleName(targetType));
+    if (constructorWithMaxParameters == null) {
+      throw new ProcessingException(targetType,
+          "Unable to resolve a constructor for the target class: " + getSimpleName(targetType));
+    }
+
+    return constructorWithMaxParameters;
   }
 
   /* Create the initial class TypeSpec Builder */
