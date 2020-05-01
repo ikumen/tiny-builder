@@ -19,6 +19,13 @@ public class BuilderFromConstructorBuilder {
     return this;
   }
 
+  public BuilderFromConstructorBuilder nameIfPresent(String name) {
+    if (name != null) {
+      this.name = name;
+    }
+    return this;
+  }
+
   public BuilderFromConstructorBuilder count(int count) {
     this.count = count;
     return this;
@@ -31,9 +38,9 @@ public class BuilderFromConstructorBuilder {
 
   public static BuilderFromConstructorBuilder with(BuilderFromConstructor builderFromConstructor) {
     return new BuilderFromConstructorBuilder()
-            .name(builderFromConstructor.getName())
-            .count(builderFromConstructor.getCount())
-            .shared(builderFromConstructor.isShared());
+        .name(builderFromConstructor.getName())
+        .count(builderFromConstructor.getCount())
+        .shared(builderFromConstructor.isShared());
   }
 
   public BuilderFromConstructor build() {

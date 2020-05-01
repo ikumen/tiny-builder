@@ -113,6 +113,7 @@ public class BuilderProcessor extends SourceGeneratingProcessor {
       TypeName paramTypeName = getTypeName(param);
       String paramName = getSimpleName(param);
 
+      // Generate the builder.field() setters
       classBuilder
           .addField(paramTypeName, paramName, Modifier.PRIVATE)
           .addMethod(
@@ -123,6 +124,23 @@ public class BuilderProcessor extends SourceGeneratingProcessor {
                   .addStatement("return this")
                   .returns(builderClassName)
                   .build());
+
+      if (!paramTypeName.isPrimitive()) {
+        // Generate the optional build.fieldIfPresent() setters for non primitive params
+        classBuilder
+            .addMethod(
+                MethodSpec.methodBuilder(paramName + "IfPresent")
+                    .addModifiers(Modifier.PUBLIC)
+                    .addParameter(paramTypeName, paramName)
+                    .addCode(CodeBlock.builder()
+                        .beginControlFlow("if ($1L != null)", paramName)
+                        .addStatement("this.$1L = $1L", paramName)
+                        .endControlFlow()
+                        .build())
+                    .addStatement("return this")
+                    .returns(builderClassName)
+                    .build());
+      }
     });
 
     if (builderAnnotation.allowWith() &&

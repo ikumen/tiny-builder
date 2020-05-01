@@ -23,6 +23,13 @@ public class BuildTargetWithMultipleConstructorsBuilder {
     return this;
   }
 
+  public BuildTargetWithMultipleConstructorsBuilder nameIfPresent(String name) {
+    if (name != null) {
+      this.name = name;
+    }
+    return this;
+  }
+
   public BuildTargetWithMultipleConstructorsBuilder count(int count) {
     this.count = count;
     return this;
