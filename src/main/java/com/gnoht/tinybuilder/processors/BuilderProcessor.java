@@ -250,23 +250,32 @@ public class BuilderProcessor extends SourceGeneratingProcessor {
    * method/constructor.
    */
   private boolean canCreateWithInstance(TypeElement targetType, ExecutableElement targetExecutable) {
+    //StringBuilder sb = new StringBuilder();
     for (VariableElement parameter : targetExecutable.getParameters()) {
       boolean hasGetterForParameter = false;
       String expectedMethodName = (isBooleanType(parameter) ? "is" : "get") + capitalize(getSimpleName(parameter));
       TypeMirror expectedMethodReturnType = parameter.asType();
+//      sb.append("\nparam={method:").append(expectedMethodName)
+//          .append(", type:").append(expectedMethodReturnType.toString()).append("}\n");
       for (Element member : targetType.getEnclosedElements()) {
-        if (member.getKind().equals(ElementKind.METHOD) &&
-              ((ExecutableElement) member).getReturnType().equals(expectedMethodReturnType) &&
-                getSimpleName(member).equals(expectedMethodName)) {
+        if (getSimpleName(member).equals(expectedMethodName)
+              && member.getKind().equals(ElementKind.METHOD)) {
+          ExecutableElement memberAsMethod = (ExecutableElement) member;
+//          sb.append("\t\ttest={method:").append(getSimpleName(member))
+//                  .append(", type:").append(memberAsMethod.getReturnType().toString()).append("}");
+          if (memberAsMethod.getReturnType().getKind().equals(expectedMethodReturnType.getKind())) {
             hasGetterForParameter = true;
             break;
+          }
         }
       }
       if (!hasGetterForParameter)
         throw new ProcessingException(targetType, "'with' static factory method " +
             "requires getters for every (" + getSimpleName(targetExecutable) + ") " +
             "parameter. " + getSimpleName(targetType) + " has no getter for " +
-            "parameter: " + getSimpleName(parameter));
+            "parameter: " + getSimpleName(parameter)
+//          "\n\n" + sb.toString()
+        );
     }
     return true;
   }

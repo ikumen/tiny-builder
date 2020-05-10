@@ -1,4 +1,5 @@
 import java.lang.String;
+import java.util.List;
 
 /**
  * DO NOT EDIT, AUTO-GENERATED CODE
@@ -9,6 +10,8 @@ public class BuilderFromConstructorBuilder {
   private int count;
 
   private boolean shared;
+
+  private List<String> tags;
 
   public static BuilderFromConstructorBuilder builder() {
     return new BuilderFromConstructorBuilder();
@@ -36,14 +39,27 @@ public class BuilderFromConstructorBuilder {
     return this;
   }
 
+  public BuilderFromConstructorBuilder tags(List<String> tags) {
+    this.tags = tags;
+    return this;
+  }
+
+  public BuilderFromConstructorBuilder tagsIfPresent(List<String> tags) {
+    if (tags != null) {
+      this.tags = tags;
+    }
+    return this;
+  }
+
   public static BuilderFromConstructorBuilder with(BuilderFromConstructor builderFromConstructor) {
     return new BuilderFromConstructorBuilder()
-        .name(builderFromConstructor.getName())
-        .count(builderFromConstructor.getCount())
-        .shared(builderFromConstructor.isShared());
+            .name(builderFromConstructor.getName())
+            .count(builderFromConstructor.getCount())
+            .shared(builderFromConstructor.isShared())
+            .tags(builderFromConstructor.getTags());
   }
 
   public BuilderFromConstructor build() {
-    return new BuilderFromConstructor(name,count,shared);
+    return new BuilderFromConstructor(name,count,shared,tags);
   }
 }
